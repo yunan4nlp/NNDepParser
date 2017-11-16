@@ -1,0 +1,6 @@
+cmake .. -DEIGEN3_DIR=E:\vs_workspace\NNDepParser\eigen -DN3L_DIR=E:\vs_workspace\NNDepParser\N3LDG
+-l -train data\test\sample.txt -dev data\test\sample.txt -test data\test\sample.txt -option data\test\option.debug
+-l -train data\test\example.txt -dev data\test\example.txt -test data\test\example.txt -option data\test\option.debug
+-l -train data\test\chinese_sample.txt -dev data\test\chinese_sample.txt -test data\test\chinese_sample.txt -option data\test\option.debug
+-l -train data\PTB_SD_3_3_0\train.txt -dev data\PTB_SD_3_3_0\dev.txt -test data\PTB_SD_3_3_0\test.txt -option data\test\option.debug
+-l -train data\CTB5\train.ctb51.txt -dev data\CTB5\dev.ctb51.txt -test data\CTB5\test.ctb51.txt
