@@ -36,8 +36,12 @@ void DepParser::createAlphabet(const vector<Instance>& vecInsts) {
 	}
 	m_driver._hyperparams.labelAlpha.initial(depLabel_stat, 0);
 	m_driver._hyperparams.wordAlpha.initial(word_stat, m_options.wordCutOff);
+	m_driver._hyperparams.extWordAlpha.initial(m_options.wordEmbFile);
+
+	m_driver._hyperparams.extWordAlpha.set_fixed_flag(true);
 	m_driver._hyperparams.wordAlpha.set_fixed_flag(true);
 	m_driver._hyperparams.labelAlpha.set_fixed_flag(true);
+
 	int tmpID1 = m_driver._hyperparams.labelAlpha.from_string("root");
 	int tmpID2 = m_driver._hyperparams.labelAlpha.from_string("ROOT");
 	if (tmpID1 >= 0)
@@ -45,8 +49,8 @@ void DepParser::createAlphabet(const vector<Instance>& vecInsts) {
 	if (tmpID2 >= 0)
 		m_driver._hyperparams.root = "ROOT";
 	m_driver._hyperparams.rootID = m_driver._hyperparams.labelAlpha.from_string(m_driver._hyperparams.root);
-	cout << "word num: " << m_driver._hyperparams.wordAlpha.m_size << endl;
-	cout << "root ID: " << m_driver._hyperparams.rootID << endl;
+	cout << "Word Num: " << m_driver._hyperparams.wordAlpha.m_size << endl;
+	cout << "Root ID: " << m_driver._hyperparams.rootID << endl;
 }
 // get gold actions of instances and static action
 void DepParser::getGoldActions(const vector<Instance>& vecInsts, vector<vector<CAction> >& vecActions) {
@@ -86,7 +90,7 @@ void DepParser::getGoldActions(const vector<Instance>& vecInsts, vector<vector<C
 	m_driver._hyperparams.actionAlpha.initial(action_stat, 0);
 	m_driver._hyperparams.actionAlpha.set_fixed_flag(true);
 	m_driver._hyperparams.actionNum = m_driver._hyperparams.actionAlpha.size();
-	cout << "action num: " << m_driver._hyperparams.actionNum << endl;
+	cout << "Action num: " << m_driver._hyperparams.actionNum << endl;
 }
 
 void DepParser::train(const string &trainFile, const string &devFile, const string &testFile, const string &modelFile,
@@ -110,11 +114,14 @@ void DepParser::train(const string &trainFile, const string &devFile, const stri
 	vector<vector<CAction> > trainInstGoldActions;
 	getGoldActions(trainInsts, trainInstGoldActions);
 
-	if (m_options.wordEmbFile != "")
-		m_driver._modelparams.wordEmb.initial(&m_driver._hyperparams.wordAlpha, m_options.wordEmbFile, m_options.wordFineTune);
-	else
-		m_driver._modelparams.wordEmb.initial(&m_driver._hyperparams.wordAlpha, m_options.wordEmbSize, m_options.wordFineTune);
+	// pretrain
+	m_driver._modelparams.extWordEmb.initial(&m_driver._hyperparams.extWordAlpha, m_options.wordEmbFile, false);
+	// random
+	m_driver._modelparams.wordEmb.initial(&m_driver._hyperparams.wordAlpha, m_options.wordEmbSize, true);
+
+	m_driver._hyperparams.extWordDim = m_driver._modelparams.extWordEmb.nDim;
 	m_driver._hyperparams.wordDim = m_driver._modelparams.wordEmb.nDim;
+	m_driver._hyperparams.wordRepresentDim = m_driver._hyperparams.extWordDim + m_driver._hyperparams.wordDim;
 
 	m_driver._modelparams.actionEmb.initial(&m_driver._hyperparams.actionAlpha, m_options.actionEmbSize, true);
 	m_driver._hyperparams.actionDim = m_driver._modelparams.actionEmb.nDim;

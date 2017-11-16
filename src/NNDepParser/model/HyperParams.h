@@ -15,17 +15,21 @@ struct HyperParams {
 	dtype clips;
 	dtype delta;
 
-	string root = "ROOT";
-	int rootID;
-	int actionNum;
-	int actionDim;
-	int wordDim;
 	int hiddenSize;
 	int rnnHiddenSize;
 	int maxlength;
 	int batch;
 
+	int wordDim;
+	int extWordDim;
+	int wordRepresentDim;
+	int actionDim;
+	int actionNum;
+	string root;
+	int rootID;
+
 	Alphabet wordAlpha;
+	Alphabet extWordAlpha;
 	Alphabet actionAlpha;
 	Alphabet labelAlpha;
 
