@@ -19,6 +19,7 @@ void DepParser::createAlphabet(const vector<Instance>& vecInsts) {
 	int maxsize = vecInsts.size();
 	unordered_map<string, int> word_stat;
 	unordered_map<string, int> depLabel_stat;
+	unordered_map<string, int> tag_stat;
 	for (int idx = 0; idx < maxsize; idx++) {
 		const Instance& inst = vecInsts[idx];
 		int wordSize = inst.words.size();
@@ -33,14 +34,21 @@ void DepParser::createAlphabet(const vector<Instance>& vecInsts) {
 			const string& label = inst.result.labels[idy];
 			depLabel_stat[label]++;
 		}
+		int tagLabelSize = inst.tags.size();
+		for (int idy = 0; idy < tagLabelSize; idy++) {
+			const string& tag_label = inst.tags[idy];
+			tag_stat[tag_label]++;
+		}
 	}
 	m_driver._hyperparams.labelAlpha.initial(depLabel_stat, 0);
 	m_driver._hyperparams.wordAlpha.initial(word_stat, m_options.wordCutOff);
 	m_driver._hyperparams.extWordAlpha.initial(m_options.wordEmbFile);
+	m_driver._hyperparams.tagAlpha.initial(tag_stat, 0);
 
 	m_driver._hyperparams.extWordAlpha.set_fixed_flag(true);
 	m_driver._hyperparams.wordAlpha.set_fixed_flag(true);
 	m_driver._hyperparams.labelAlpha.set_fixed_flag(true);
+	m_driver._hyperparams.tagAlpha.set_fixed_flag(true);
 
 	int tmpID1 = m_driver._hyperparams.labelAlpha.from_string("root");
 	int tmpID2 = m_driver._hyperparams.labelAlpha.from_string("ROOT");
@@ -50,6 +58,7 @@ void DepParser::createAlphabet(const vector<Instance>& vecInsts) {
 		m_driver._hyperparams.root = "ROOT";
 	m_driver._hyperparams.rootID = m_driver._hyperparams.labelAlpha.from_string(m_driver._hyperparams.root);
 	cout << "Word Num: " << m_driver._hyperparams.wordAlpha.m_size << endl;
+	cout << "Tag Num:" << m_driver._hyperparams.tagAlpha.m_size << endl;
 	cout << "Root ID: " << m_driver._hyperparams.rootID << endl;
 }
 // get gold actions of instances and static action
@@ -72,6 +81,7 @@ void DepParser::getGoldActions(const vector<Instance>& vecInsts, vector<vector<C
 		all_states[0].clear(); // clear first state;
 		all_states[0].ready(&inst); //  the state of instance
 		step = 0;
+		action_stat[nullkey] = 1;
 		while (!all_states[step].isEnd()) {
 			all_states[step].getGoldAction(m_driver._hyperparams, inst.result, ac);
 			actions.push_back(ac);
@@ -115,16 +125,20 @@ void DepParser::train(const string &trainFile, const string &devFile, const stri
 	getGoldActions(trainInsts, trainInstGoldActions);
 
 	// pretrain
-	m_driver._modelparams.extWordEmb.initial(&m_driver._hyperparams.extWordAlpha, m_options.wordEmbFile, false);
+	m_driver._modelparams.ext_word_table.initial(&m_driver._hyperparams.extWordAlpha, m_options.wordEmbFile, false);
 	// random
-	m_driver._modelparams.wordEmb.initial(&m_driver._hyperparams.wordAlpha, m_options.wordEmbSize, true);
+	m_driver._modelparams.word_table.initial(&m_driver._hyperparams.wordAlpha, m_options.wordEmbSize, true);
+	m_driver._modelparams.tag_table.initial(&m_driver._hyperparams.tagAlpha, m_options.tagEmbSize, m_options.tagFineTune);
 
-	m_driver._hyperparams.extWordDim = m_driver._modelparams.extWordEmb.nDim;
-	m_driver._hyperparams.wordDim = m_driver._modelparams.wordEmb.nDim;
-	m_driver._hyperparams.wordRepresentDim = m_driver._hyperparams.extWordDim + m_driver._hyperparams.wordDim;
+	m_driver._hyperparams.wordDim = m_driver._modelparams.word_table.nDim;
+	m_driver._hyperparams.extWordDim = m_driver._modelparams.ext_word_table.nDim;
+	m_driver._hyperparams.wordConcatDim = m_driver._hyperparams.extWordDim + m_driver._hyperparams.wordDim;
+	m_driver._hyperparams.tagDim = m_driver._modelparams.tag_table.nDim;
 
-	m_driver._modelparams.actionEmb.initial(&m_driver._hyperparams.actionAlpha, m_options.actionEmbSize, true);
-	m_driver._hyperparams.actionDim = m_driver._modelparams.actionEmb.nDim;
+	m_driver._modelparams.scored_action_table.initial(&m_driver._hyperparams.actionAlpha, m_options.stateHiddenSize, true);
+
+	m_driver._modelparams.action_table.initial(&m_driver._hyperparams.actionAlpha, m_options.actionEmbSize, true);
+	m_driver._hyperparams.actionDim = m_driver._modelparams.action_table.nDim;
 
 	m_driver._hyperparams.setRequared(m_options);
 	m_driver.initial();
@@ -146,6 +160,7 @@ void DepParser::train(const string &trainFile, const string &devFile, const stri
 		eval.reset();
 		std::cout << "random: " << indexes[0] << ", " << indexes[indexes.size() - 1] << std::endl;
 
+		auto t_start = std::chrono::high_resolution_clock::now();
 		for (int idx = 0; idx < batchBlock; idx++) {
 			int start_pos = idx * m_options.batchSize;
 			int end_pos = (idx + 1) * m_options.batchSize;
@@ -153,7 +168,6 @@ void DepParser::train(const string &trainFile, const string &devFile, const stri
 				end_pos = inputSize;
 			subInstances.clear();
 			subGoldActions.clear();
-			auto t_start = std::chrono::high_resolution_clock::now();
 			for (int idy = start_pos; idy < end_pos; idy++) { // one batch
 				subInstances.push_back(trainInsts[indexes[idy]]);
 				subGoldActions.push_back(trainInstGoldActions[indexes[idy]]);
@@ -192,8 +206,11 @@ void DepParser::train(const string &trainFile, const string &devFile, const stri
 			auto t_end_dev = std::chrono::high_resolution_clock::now();
 			cout << "Dev finished. Total time taken is: " << std::chrono::duration<double>(t_end_dev - t_start_dev).count() << std::endl;
 			cout << "dev:" << std::endl;
+			cout << "uas: ";
 			dev_uas.print();
+			cout << "las: ";
 			dev_las.print();
+			cout << "las_punc: ";
 			dev_las_punc.print();
 			if (!m_options.outBest.empty() && dev_las.getAccuracy() > bestFmeasure) {
 				m_pipe.outputAllInstances(devFile + m_options.outBest, decodeInstResults);
@@ -216,8 +233,11 @@ void DepParser::train(const string &trainFile, const string &devFile, const stri
 				auto t_end_test = std::chrono::high_resolution_clock::now();
 				cout << "Test finished. Total time taken is: " << std::chrono::duration<double>(t_end_test - t_start_test).count() << std::endl;
 				cout << "test:" << std::endl;
+				cout << "uas: ";
 				test_uas.print();
+				cout << "las: ";
 				test_las.print();
+				cout << "las_punc: ";
 				test_las_punc.print();
 
 				if (!m_options.outBest.empty() && bCurIterBetter) {
@@ -238,19 +258,18 @@ void DepParser::writeModelFile(const string &outputModelFile) {
 void DepParser::loadModelFile(const string &inputModelFile) {
 }
 
-void DepParser::predict(const vector<Instance> &input, vector<CResult> &output) {
+void DepParser::predict(const vector<Instance> &inputs, vector<CResult> &outputs) {
 	vector<Instance> batch_input;
-	vector<CResult> batch_output;
-	int input_size = input.size();
-	output.clear();
-	for (int idx = 0; idx < input_size; idx++)
-	{
-		batch_input.push_back(input[idx]);
+	vector<CResult> batch_outputs;
+	int input_size = inputs.size();
+	outputs.clear();
+	for (int idx = 0; idx < input_size; idx++) {
+		batch_input.push_back(inputs[idx]);
 		if (batch_input.size() == m_options.batchSize || idx == input_size - 1) {
-			batch_output.clear();
-			m_driver.decode(batch_input, batch_output);
+			batch_outputs.clear();
+			m_driver.decode(batch_input, batch_outputs);
 			batch_input.clear();
-			output.insert(output.end(), batch_output.begin(), batch_output.end());
+			outputs.insert(outputs.end(), batch_outputs.begin(), batch_outputs.end());
 		}
 	}
 }
@@ -260,7 +279,7 @@ int main(int argc, char* argv[]) {
 	std::string outputFile = "";
 	bool bTrain = false;
 	dsr::Argument_helper ah;
-	int threads = 2;
+	int threads = 1;
 
 
 	ah.new_flag("l", "learn", "train or test", bTrain);

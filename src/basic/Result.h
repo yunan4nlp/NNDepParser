@@ -15,11 +15,13 @@ public:
   vector<int> heads;
   vector<string> labels;
 
-  const vector<string> *words;
+  //const vector<string> *words;
+  vector<string> words;
 
 public:
   inline void clear() {
-    words = nullptr;
+    //words = nullptr;
+		words.clear();
     tags.clear();
     heads.clear();
     labels.clear();
@@ -30,7 +32,7 @@ public:
       tags.resize(size);
       heads.resize(size);
       labels.resize(size);
-
+      words.resize(size);
     }
   }
 
@@ -47,8 +49,9 @@ public:
       tags[i] = result.tags[i];
       heads[i] = result.heads[i];
       labels[i] = result.labels[i];
+      words[i] = result.words[i];
     }
-    words = result.words;
+//    words = result.words;
   }
 
   inline void copyValuesFrom(const CResult &result, const vector<string> *pwords) {
@@ -60,14 +63,16 @@ public:
       tags[i] = result.tags[i];
       heads[i] = result.heads[i];
       labels[i] = result.labels[i];
+      words[i] = result.words[i];
     }
-    words = pwords;
+//    words = pwords;
   }
 
 
   inline std::string str() const {
     for (int i = 0; i < size(); ++i) {
-      std::cout << (*words)[i] << " " << tags[i] << " " << heads[i] << " " << labels[i] << std::endl;
+      //std::cout << (*words)[i] << " " << tags[i] << " " << heads[i] << " " << labels[i] << std::endl;
+      std::cout << words[i] << " " << tags[i] << " " << heads[i] << " " << labels[i] << std::endl;
     }
     std::cout << endl;
   }

@@ -37,7 +37,7 @@ public:
 
 	inline void decode(Graph *cg, const Instance &inst, const vector<CAction> *gold_actions = NULL) {
 		clearVec(outputs); // clear last outputs
-		CState* pGenerator; // the state after best action
+		CState *pGenerator; // the state after best action
 		int step = 0; // recored every step
 		int offset;
 		vector<CAction> candidate_actions; // candidate actions of every candidate actions
@@ -52,7 +52,7 @@ public:
 		CAction gold_answer; // the state will move gold action when trainning
 		bool gold_action_scored;
 		while (true) {
-			pGenerator->prepare(globalnodes); // prepare atom feature
+			pGenerator->prepare(globalnodes, *pOpts); // prepare atom feature
 			pGenerator->getCandidateActions(candidate_actions, *pOpts); // get the candidate actions
 			if (cg->train) gold_answer.set((*gold_actions)[step]); // get gold action when trainning
 			pGenerator->computeNextActionScore(cg, candidate_actions); // calculate the scores of candidate actions

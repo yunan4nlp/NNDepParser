@@ -98,8 +98,9 @@ public:
 			assert(_have_parent[idx] == 1); // check parent
 			result.labels[idx] = opts.labelAlpha.from_id(_label[idx]);
 			result.heads[idx] = _head[idx];
+			result.words[idx] = inst->words[idx];
 		}
-		result.words = &inst->words;
+		//result.words = &inst->words;
 	}
 
 	// prepare instance
@@ -116,6 +117,7 @@ public:
 		memcpy(next->_label, _label, sizeof(short) * _next_index);
 		next->_word_size = _word_size;
 		next->inst = inst;
+		next->_pre_state = this;
 	}
 
   // temp mark
@@ -168,7 +170,6 @@ public:
 
 		next->_stack[next->_stack_size - 1] = _next_index;
 		next->_have_parent[_next_index] = 0;
-		_pre_state = this;
 		next->doneMark();
 		next->_pre_action.set(CAction::SHIFT, -1);
 	}
@@ -186,7 +187,6 @@ public:
 		next->_have_parent[top1] = 1;
 		next->_label[top1] = dep;
 
-		_pre_state = this;
 		next->doneMark();
 		next->_pre_action.set(CAction::ARC_LEFT, dep);
 	}
@@ -203,7 +203,6 @@ public:
 		next->_have_parent[top0] = 1;
 		next->_label[top0] = dep;
 
-		_pre_state = this;
 		next->doneMark();
 		next->_pre_action.set(CAction::ARC_RIGHT, dep);
 	}
@@ -219,7 +218,6 @@ public:
 		next->_have_parent[top0] = 1;
 		next->_label[top0] = dep;
 
-		_pre_state = this;
 		next->doneMark();
 		next->_pre_action.set(CAction::POP_ROOT, dep);
 	}
@@ -292,12 +290,22 @@ public:
 		}
 	}
 	// prepare atom feature of this state
-	void prepare(const GlobalNodes& globelnodes) {
-		_atom_feat._pword_lstm_left = &(globelnodes.word_lstm_left);
-		_atom_feat._pword_lstm_right = &(globelnodes.word_lstm_right);
+	void prepare(GlobalNodes& globelnodes, const HyperParams &hyperparms) {
+		_atom_feat._pword_lstm = &(globelnodes.word_lstm_concat2);
 		// next index is LSTM index
 		_atom_feat._next_index = _next_index >= 0 && _next_index < _word_size ? _next_index : -1;
-		//_atom_feat._next_index = _next_index;
+
+		_atom_feat._stack_top_0 = _stack_size > 0 ? _stack[_stack_size - 1] : -1;
+		_atom_feat._stack_top_1 = _stack_size > 1 ? _stack[_stack_size - 2] : -1;
+		_atom_feat._stack_top_2 = _stack_size > 2 ? _stack[_stack_size - 3] : -1;
+
+		_atom_feat._pre_action_str = 
+			_is_start ? nullkey : _pre_action.str(hyperparms);
+		_atom_feat._pre_pre_action_str = 
+			_pre_state == NULL || _pre_state->_is_start ? nullkey : _pre_state->_pre_action.str(hyperparms);
+		_atom_feat._pre_action_lstm =
+			_pre_state == NULL ? NULL : &_pre_state->_next_action_score.action_lstm;
+
 	}
 };
 
@@ -308,7 +316,7 @@ public:
 	dtype score; // the score of action
 
 	CAction ac;
-	bool is_gold; // is gold state AND move to gold action ? 
+	bool is_gold; // is gold state && move to gold action ? true:false;
 	int position; // the position of action.
 
 	CScoredAction(){

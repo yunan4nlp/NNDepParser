@@ -147,6 +147,7 @@ public:
 		}
 
 		_encoderGraph.compute();
+
 		for (int idx = 0; idx < num; idx++) {
 			_decoderGraphs[idx].clearValue();
 			_builder[idx].decode(&_decoderGraphs[idx], sentences[idx]);

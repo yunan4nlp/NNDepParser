@@ -12,8 +12,13 @@ public:
   int wordCutOff;
 	int wordEmbSize;
 	string wordEmbFile;
+	int tagEmbSize;
+	bool tagFineTune;
 
 	int actionEmbSize;
+	int stateHiddenSize;
+	int actionHiddenSize;
+	int wordRepresentHiddenSize;
 	int hiddenSize;
 	int rnnHiddenSize;
   int maxIter;
@@ -49,10 +54,18 @@ public:
     wordEmbSize = 100;
 		wordFineTune = true;
 
+
+		tagEmbSize = 100;
+		tagFineTune = true;
+
 		hiddenSize = 100;
 		rnnHiddenSize = 100;
 
 		actionEmbSize = 100;
+
+		stateHiddenSize = 100;
+		actionHiddenSize = 100;
+		wordRepresentHiddenSize = 100;
 
     verboseIter = 100;
     saveIntermediate = true;
@@ -95,13 +108,27 @@ public:
 
       if (pr.first == "wordEmbSize")
         wordEmbSize = atoi(pr.second.c_str());
+
+      if (pr.first == "tagEmbSize")
+        tagEmbSize = atoi(pr.second.c_str());
+
       if (pr.first == "wordEmbFile")
         wordEmbFile = pr.second;
 
       if (pr.first == "actionEmbSize")
         actionEmbSize = atoi(pr.second.c_str());
+
+      if (pr.first == "actionHiddenSize")
+        actionHiddenSize = atoi(pr.second.c_str());
+      if (pr.first == "stateHiddenSize")
+        stateHiddenSize = atoi(pr.second.c_str());
+      if (pr.first == "wordRepresentHiddenSize")
+        wordRepresentHiddenSize = atoi(pr.second.c_str());
+
       if (pr.first == "wordFineTune")
 				wordFineTune = (pr.second == "true") ? true : false;
+      if (pr.first == "tagFineTune")
+				tagFineTune = (pr.second == "true") ? true : false;
 
       if (pr.first == "hiddenSize")
         hiddenSize = atoi(pr.second.c_str());
@@ -136,9 +163,16 @@ public:
 
 
     std::cout << "wordEmbSize = " << wordEmbSize << std::endl;
-    std::cout << "actionEmbSize = " << actionEmbSize << std::endl;
-
     std::cout << "wordEmbFile = " << wordEmbFile << std::endl;
+    std::cout << "wordFineTune = " << wordFineTune << std::endl;
+    std::cout << "actionEmbSize = " << actionEmbSize << std::endl;
+    std::cout << "actionHiddenSize = " << actionHiddenSize << std::endl;
+    std::cout << "stateHiddenSize = " << stateHiddenSize << std::endl;
+    std::cout << "wordRepresentHiddenSize = " << wordRepresentHiddenSize << std::endl;
+
+    std::cout << "tagEmbSize = " << tagEmbSize << std::endl;
+    std::cout << "tagFineTune = " << tagFineTune << std::endl;
+
     std::cout << "unkStrategy = " << unkStrategy << std::endl;
 
 

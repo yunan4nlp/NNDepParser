@@ -26,7 +26,7 @@ public:
     if (!m_outf.is_open())
       return -1;
 	  for (int i = 0; i < result.size(); ++i) {
-      m_outf << (*result.words)[i] << " " << result.tags[i]  << " " << result.heads[i]  << " " << result.labels[i] << std::endl;
+      m_outf << result.words[i] << " " << result.tags[i]  << " " << result.heads[i]  << " " << result.labels[i] << std::endl;
     }
     m_outf << endl;
     return 0;

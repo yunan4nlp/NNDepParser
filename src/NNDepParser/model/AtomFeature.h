@@ -5,8 +5,16 @@
 
 class AtomFeat {
 public:
-	const LSTM1Builder* _pword_lstm_left;
-	const LSTM1Builder* _pword_lstm_right;
+	vector<ConcatNode> *_pword_lstm;
+
 	int _next_index;
+	string _pre_action_str;
+	string _pre_pre_action_str;
+
+	IncLSTM1Builder *_pre_action_lstm;
+
+	int _stack_top_0;
+	int _stack_top_1;
+	int _stack_top_2;
 };
 #endif /*ATOM_FEATURE_H */

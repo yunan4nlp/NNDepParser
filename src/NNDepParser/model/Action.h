@@ -7,6 +7,11 @@ public:
 	short _label; 
 	unsigned long _code;
 
+	CAction(){
+		_code = NO_ACTION;
+		_label = -1;
+	}
+
 	inline bool isNone() const { return _code == NO_ACTION; }
 
 	inline bool isFinish() const { return _code == POP_ROOT; }

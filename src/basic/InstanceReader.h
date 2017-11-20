@@ -34,6 +34,7 @@ public:
     for (int i = 0; i < vecLine.size(); i++) {
       split_bychar(vecLine[i], charInfo, '\t');
       m_instance.words.push_back(charInfo[0]);
+			m_instance.tags.push_back(charInfo[1]);
       m_instance.result.tags.push_back(charInfo[1]);
       m_instance.result.heads.push_back(atoi(charInfo[2].c_str()));
       m_instance.result.labels.push_back(charInfo[3]);
@@ -51,7 +52,7 @@ public:
       }
     }
 
-    m_instance.result.words = &m_instance.words;
+    m_instance.result.words = m_instance.words;
 
     return &m_instance;
   }

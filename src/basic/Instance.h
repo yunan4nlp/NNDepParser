@@ -27,11 +27,13 @@ public:
 	void clear() {
 		words.clear();
 		result.clear();
+		tags.clear();
 	}
 
 	void allocate(const int &size) {
 		if (words.size() != size) {
 			words.resize(size);
+			tags.resize(size);
 		}
 		result.allocate(size);
 	}
@@ -41,6 +43,7 @@ public:
 		allocate(anInstance.size());
 		for (int i = 0; i < anInstance.size(); i++) {
 			words[i] = anInstance.words[i];
+			tags[i] = anInstance.tags[i];
 		}
 
 		result.copyValuesFrom(anInstance.result, &words);
@@ -70,6 +73,7 @@ public:
 
 public:
 	vector<string> words;
+	vector<string> tags;
 	CResult result;
 };
 

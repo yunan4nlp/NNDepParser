@@ -7,6 +7,10 @@
 // score the action one by one
 class ActionedNodes {
 public:
+	LookupNode pre_action_input;
+	LookupNode pre_pre_action_input;
+	ConcatNode action_concat;
+	IncLSTM1Builder action_lstm;
 
 	vector<LookupNode> current_action_input;
 	vector<PDotNode> action_score;
@@ -23,29 +27,54 @@ public:
 		action_score.resize(hyparams.actionNum);
 		outputs.resize(hyparams.actionNum);
 		for (int idx = 0; idx < hyparams.actionNum; idx++) {
-			current_action_input[idx].setParam(&params.actionEmb);
-			current_action_input[idx].init(hyparams.actionDim, hyparams.dropProb);
+			current_action_input[idx].setParam(&params.scored_action_table);
+			current_action_input[idx].init(hyparams.stateHiddenSize, hyparams.dropProb);
 			action_score[idx].init(1, -1);
 			outputs[idx].init(1, -1);
 		}
-		bucket_word.init(hyparams.rnnHiddenSize, -1);
-		state_concat.init(hyparams.rnnHiddenSize * 2, -1);
+		pre_action_input.setParam(&params.action_table);
+		pre_action_input.init(hyparams.actionDim, hyparams.dropProb);
+		pre_pre_action_input.setParam(&params.action_table);
+		pre_pre_action_input.init(hyparams.actionDim, hyparams.dropProb);
+		action_concat.init(hyparams.actionDim * 2, -1);
+		action_lstm.init(&params.action_lstm_params, hyparams.dropProb);
+		bucket_word.init(hyparams.rnnHiddenSize * 4, -1);
+		state_concat.init(hyparams.stateConcatSize, -1);
 		state_hidden.setParam(&params.state_hidden_params);
-		state_hidden.init(hyparams.actionDim, hyparams.dropProb);
+		state_hidden.init(hyparams.stateHiddenSize, hyparams.dropProb);
 		pOpts = &hyparams;
 	}
 
-	inline void forward(Graph *cg, const vector<CAction> &actions, const AtomFeat &atomFeat) {
+	inline void forward(Graph *cg, const vector<CAction> &actions,  AtomFeat &atomFeat) {
 		int action_num = actions.size();
+		pre_action_input.forward(cg, atomFeat._pre_action_str);
+		pre_pre_action_input.forward(cg, atomFeat._pre_pre_action_str);
+		action_concat.forward(cg, &pre_action_input, &pre_pre_action_input);
+		action_lstm.forward(cg, &action_concat, atomFeat._pre_action_lstm);
 		CAction ac;
 		bucket_word.forward(cg, 0);
-		const PNode pword_lstm_left = 
-			atomFeat._next_index >= 0 ? (const PNode)&atomFeat._pword_lstm_left->_hiddens[atomFeat._next_index] : (const PNode)&bucket_word;
-		const PNode pword_lstm_right = 
-			atomFeat._next_index >= 0 ? (const PNode)&atomFeat._pword_lstm_right->_hiddens[atomFeat._next_index] : (const PNode)&bucket_word;
+		PNode pword_lstm_buffer0 =
+			atomFeat._next_index >= 0 ? &(*atomFeat._pword_lstm)[atomFeat._next_index] : (PNode)&bucket_word;
+
+		PNode pword_lstm_stack_top0 =
+			atomFeat._stack_top_0 >= 0 ? &(*atomFeat._pword_lstm)[atomFeat._stack_top_0] : (PNode)&bucket_word;
+
+		PNode pword_lstm_stack_top1 =
+			atomFeat._stack_top_1 >= 0 ? &(*atomFeat._pword_lstm)[atomFeat._stack_top_1] : (PNode)&bucket_word;
+
+		PNode pword_lstm_stack_top2 =
+			atomFeat._stack_top_2 >= 0 ? &(*atomFeat._pword_lstm)[atomFeat._stack_top_2] : (PNode)&bucket_word;
+
 		vector<PNode> feats;
-		feats.push_back(pword_lstm_left);
-		feats.push_back(pword_lstm_right);
+
+
+		feats.push_back(&action_lstm._hidden);
+		feats.push_back(pword_lstm_buffer0);
+		feats.push_back(pword_lstm_stack_top0);
+		feats.push_back(pword_lstm_stack_top1);
+		feats.push_back(pword_lstm_stack_top2);
+
+
 		state_concat.forward(cg, feats);
 		state_hidden.forward(cg, &state_concat);
 		vector<PNode> sumNodes;

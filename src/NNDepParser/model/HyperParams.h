@@ -19,11 +19,17 @@ struct HyperParams {
 	int rnnHiddenSize;
 	int maxlength;
 	int batch;
+	int stateHiddenSize;
+	int actionHiddenSize;
+	int stateConcatSize;
 
 	int wordDim;
 	int extWordDim;
-	int wordRepresentDim;
 	int actionDim;
+	int wordConcatDim;
+	int tagDim;
+
+	int wordRepresentHiddenSize;
 	int actionNum;
 	string root;
 	int rootID;
@@ -32,6 +38,7 @@ struct HyperParams {
 	Alphabet extWordAlpha;
 	Alphabet actionAlpha;
 	Alphabet labelAlpha;
+	Alphabet tagAlpha;
 
 public:
 	HyperParams() {
@@ -46,6 +53,12 @@ public:
 		dropProb = opt.dropProb;
 		hiddenSize = opt.hiddenSize;
 		rnnHiddenSize = opt.rnnHiddenSize;
+		stateHiddenSize = opt.stateHiddenSize;
+		actionHiddenSize = opt.actionHiddenSize;
+		wordRepresentHiddenSize = opt.wordRepresentHiddenSize;
+		stateConcatSize = rnnHiddenSize * 16 + actionHiddenSize;
+		//stateConcatSize = rnnHiddenSize * 2;
+		//stateConcatSize =  actionHiddenSize;
 		batch = opt.batchSize;
 		clips = opt.clips;
 		delta = opt.delta;

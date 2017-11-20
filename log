@@ -1,0 +1,95 @@
+wordCutOff = 0
+maxIter = 1000
+batchSize = 1
+adaEps = 1e-06
+adaAlpha = 0.001
+regParameter = 1e-08
+dropProb = -1
+clips = 10
+delta = 0
+wordEmbSize = 100
+actionEmbSize = 100
+actionHiddenSize = 100
+stateHiddenSize = 100
+wordRepresentHiddenSize = 100
+wordEmbFile = E:\vs_workspace\NNDepParser\data\emb\zh.test.vec
+unkStrategy = 1
+verboseIter = 1
+saveIntermediate = 1
+maxInstance = -1
+outBest = 
+
+
+instance num: 1
+
+instance num: 1
+
+instance num: 1
+Creating Alphabet...
+Word Num: 22
+Root ID: 5
+1 
+Action num: 9
+word embedding dim is 100
+-UNKNOWN- not found, using averaged value to initialize.
+OOV num is 0, total num is 1001, embedding oov ratio is 0
+unknown id1000
+##### Iteration 1
+random: 0, 0
+current: 1, Cost = 88.5372, Correct(%) = 0.1875, Time: 0.162435s
+Dev start.
+int : 24 导弹
+out: 24
+Dev finished. Total time taken is: 0.0844396
+dev:
+uas: Accuracy:	P=6/21=0.285714
+las: Accuracy:	P=0/21=0
+las_punc: Accuracy:	P=0/24=0
+Test start.
+int : 24 导弹
+out: 24
+Test finished. Total time taken is: 0.0871158
+test:
+uas: Accuracy:	P=6/21=0.285714
+las: Accuracy:	P=0/21=0
+las_punc: Accuracy:	P=0/24=0
+##### Iteration 2
+random: 0, 0
+current: 1, Cost = 85.8566, Correct(%) = 0.1875, Time: 0.161137s
+Dev start.
+int : 24 导弹
+out: 24
+Dev finished. Total time taken is: 0.0846496
+dev:
+uas: Accuracy:	P=6/21=0.285714
+las: Accuracy:	P=0/21=0
+las_punc: Accuracy:	P=0/24=0
+Test start.
+int : 24 导弹
+out: 24
+Test finished. Total time taken is: 0.0836595
+test:
+uas: Accuracy:	P=6/21=0.285714
+las: Accuracy:	P=0/21=0
+las_punc: Accuracy:	P=0/24=0
+##### Iteration 3
+random: 0, 0
+current: 1, Cost = 83.0988, Correct(%) = 0.1875, Time: 0.159947s
+Dev start.
+int : 24 导弹
+out: 24
+Dev finished. Total time taken is: 0.0845827
+dev:
+uas: Accuracy:	P=6/21=0.285714
+las: Accuracy:	P=0/21=0
+las_punc: Accuracy:	P=0/24=0
+Test start.
+int : 24 导弹
+out: 24
+Test finished. Total time taken is: 0.0838741
+test:
+uas: Accuracy:	P=6/21=0.285714
+las: Accuracy:	P=0/21=0
+las_punc: Accuracy:	P=0/24=0
+##### Iteration 4
+random: 0, 0
